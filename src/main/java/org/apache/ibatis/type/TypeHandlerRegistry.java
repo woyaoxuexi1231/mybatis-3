@@ -15,6 +15,11 @@
  */
 package org.apache.ibatis.type;
 
+import org.apache.ibatis.binding.MapperMethod.ParamMap;
+import org.apache.ibatis.io.ResolverUtil;
+import org.apache.ibatis.io.Resources;
+import org.apache.ibatis.session.Configuration;
+
 import java.io.InputStream;
 import java.io.Reader;
 import java.lang.reflect.Constructor;
@@ -43,11 +48,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.ibatis.binding.MapperMethod.ParamMap;
-import org.apache.ibatis.io.ResolverUtil;
-import org.apache.ibatis.io.Resources;
-import org.apache.ibatis.session.Configuration;
-
 /**
  * @author Clinton Begin
  * @author Kazuki Shimizu
@@ -73,9 +73,7 @@ public final class TypeHandlerRegistry {
   /**
    * The constructor that pass the MyBatis configuration.
    *
-   * @param configuration
-   *          a MyBatis configuration
-   *
+   * @param configuration a MyBatis configuration
    * @since 3.5.4
    */
   public TypeHandlerRegistry(Configuration configuration) {
@@ -185,9 +183,7 @@ public final class TypeHandlerRegistry {
    * Set a default {@link TypeHandler} class for {@link Enum}. A default {@link TypeHandler} is
    * {@link org.apache.ibatis.type.EnumTypeHandler}.
    *
-   * @param typeHandler
-   *          a type handler class for {@link Enum}
-   *
+   * @param typeHandler a type handler class for {@link Enum}
    * @since 3.4.5
    */
   public void setDefaultEnumTypeHandler(Class<? extends TypeHandler> typeHandler) {
@@ -236,12 +232,15 @@ public final class TypeHandlerRegistry {
 
   @SuppressWarnings("unchecked")
   private <T> TypeHandler<T> getTypeHandler(Type type, JdbcType jdbcType) {
+    // 非单一的 Java 类型
     if (ParamMap.class.equals(type)) {
       return null;
     }
+    // 先根据 Java 类型寻找对应的 jdbcHandlerMap
     Map<JdbcType, TypeHandler<?>> jdbcHandlerMap = getJdbcHandlerMap(type);
     TypeHandler<?> handler = null;
     if (jdbcHandlerMap != null) {
+      // 如果存在 jdbcHandlerMap, 那么根据 JDBC 类型进行寻找
       handler = jdbcHandlerMap.get(jdbcType);
       if (handler == null) {
         handler = jdbcHandlerMap.get(null);
@@ -483,7 +482,6 @@ public final class TypeHandlerRegistry {
    * Gets the type handlers.
    *
    * @return the type handlers
-   *
    * @since 3.2.2
    */
   public Collection<TypeHandler<?>> getTypeHandlers() {
