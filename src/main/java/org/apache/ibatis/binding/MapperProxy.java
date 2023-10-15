@@ -15,6 +15,10 @@
  */
 package org.apache.ibatis.binding;
 
+import org.apache.ibatis.reflection.ExceptionUtil;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.util.MapUtil;
+
 import java.io.Serializable;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -26,10 +30,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
 
-import org.apache.ibatis.reflection.ExceptionUtil;
-import org.apache.ibatis.session.SqlSession;
-import org.apache.ibatis.util.MapUtil;
-
 /**
  * @author Clinton Begin
  * @author Eduardo Macarron
@@ -38,11 +38,26 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
 
   private static final long serialVersionUID = -4724728412955527868L;
   private static final int ALLOWED_MODES = MethodHandles.Lookup.PRIVATE | MethodHandles.Lookup.PROTECTED
-      | MethodHandles.Lookup.PACKAGE | MethodHandles.Lookup.PUBLIC;
+    | MethodHandles.Lookup.PACKAGE | MethodHandles.Lookup.PUBLIC;
+  /*
+  针对 JDK 8 中的特殊处理，该字段指向了 MethodHandles.Lookup 的构造方法。
+   */
   private static final Constructor<Lookup> lookupConstructor;
+  /*
+  除了 JDK 8 之外的其他 JDK 版本会使用该字段，该字段指向 MethodHandles.privateLookupIn() 方法。
+   */
   private static final Method privateLookupInMethod;
+  /*
+  记录了当前 MapperProxy 关联的 SqlSession 对象。在与当前 MapperProxy 关联的代理对象中，会用该 SqlSession 访问数据库。
+   */
   private final SqlSession sqlSession;
+  /*
+  Mapper 接口类型，也是当前 MapperProxy 关联的代理对象实现的接口类型。
+   */
   private final Class<T> mapperInterface;
+  /*
+  用于缓存 MapperMethodInvoker 对象的集合。methodCache 中的 key 是 Mapper 接口中的方法，value 是该方法对应的 MapperMethodInvoker 对象。
+   */
   private final Map<Method, MapperMethodInvoker> methodCache;
 
   public MapperProxy(SqlSession sqlSession, Class<T> mapperInterface, Map<Method, MapperMethodInvoker> methodCache) {
@@ -68,8 +83,8 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
         lookup.setAccessible(true);
       } catch (NoSuchMethodException e) {
         throw new IllegalStateException(
-            "There is neither 'privateLookupIn(Class, Lookup)' nor 'Lookup(Class, int)' method in java.lang.invoke.MethodHandles.",
-            e);
+          "There is neither 'privateLookupIn(Class, Lookup)' nor 'Lookup(Class, int)' method in java.lang.invoke.MethodHandles.",
+          e);
       } catch (Exception e) {
         lookup = null;
       }
@@ -80,9 +95,11 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
   @Override
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
     try {
+      // 继承自 Object 的方法直接执行原方法
       if (Object.class.equals(method.getDeclaringClass())) {
         return method.invoke(this, args);
       } else {
+
         return cachedInvoker(method).invoke(proxy, method, args, sqlSession);
       }
     } catch (Throwable t) {
@@ -93,6 +110,7 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
   private MapperMethodInvoker cachedInvoker(Method method) throws Throwable {
     try {
       return MapUtil.computeIfAbsent(methodCache, method, m -> {
+        // 默认方法是 public 非 abstract 的实例方法, 即具有方法的非 static方法, 在接口类型中声明
         if (m.isDefault()) {
           try {
             if (privateLookupInMethod == null) {
@@ -101,7 +119,7 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
               return new DefaultMethodInvoker(getMethodHandleJava9(method));
             }
           } catch (IllegalAccessException | InstantiationException | InvocationTargetException
-              | NoSuchMethodException e) {
+                   | NoSuchMethodException e) {
             throw new RuntimeException(e);
           }
         } else {
@@ -115,15 +133,15 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
   }
 
   private MethodHandle getMethodHandleJava9(Method method)
-      throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
     final Class<?> declaringClass = method.getDeclaringClass();
     return ((Lookup) privateLookupInMethod.invoke(null, declaringClass, MethodHandles.lookup())).findSpecial(
-        declaringClass, method.getName(), MethodType.methodType(method.getReturnType(), method.getParameterTypes()),
-        declaringClass);
+      declaringClass, method.getName(), MethodType.methodType(method.getReturnType(), method.getParameterTypes()),
+      declaringClass);
   }
 
   private MethodHandle getMethodHandleJava8(Method method)
-      throws IllegalAccessException, InstantiationException, InvocationTargetException {
+    throws IllegalAccessException, InstantiationException, InvocationTargetException {
     final Class<?> declaringClass = method.getDeclaringClass();
     return lookupConstructor.newInstance(declaringClass, ALLOWED_MODES).unreflectSpecial(method, declaringClass);
   }
