@@ -16,4 +16,20 @@
 /**
  * Base package for mapping.
  */
+/**
+ * MyBatis的`mapping`包主要用于处理SQL语句的映射¹。以下是一些主要的类及其作用：
+ *
+ * - `ResultMap`：这个类定义了Java对象与数据库表的映射关系，将查询结果映射到Java对象上，从而实现数据的自动转换和封装¹。
+ *
+ * - `ParameterMap`：这个类定义了参数映射，将Java对象的属性与SQL语句的参数一一对应¹。
+ *
+ * - `MappedStatement`：这个类定义了各种SQL语句，包括查询、插入、更新、删除等操作，也可以使用动态SQL语句实现条件查询和多表联合查询等复杂操作¹。
+ *
+ * 总体来说，MyBatis的`mapping`包提供了一套完整的工具集，用于处理与资源加载和类加载相关的任务。
+ *
+ * 源: 与必应的对话， 2023/10/17
+ * (1) 这下够清楚了吧！详解Mybatis的Mapper映射文件 - 知乎. https://zhuanlan.zhihu.com/p/338300626.
+ * (2) Mybatis框架中的mapper文件是用来做什么的？ - 知乎专栏. https://zhuanlan.zhihu.com/p/632626557.
+ * (3) 关于mybatis 的mapper namespace 作用及解析 - emanlee - 博客园. https://www.cnblogs.com/emanlee/p/15869468.html.
+ */
 package org.apache.ibatis.mapping;
