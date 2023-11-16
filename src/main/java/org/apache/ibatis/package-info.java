@@ -17,3 +17,8 @@
  * The MyBatis data mapper framework makes it easier to use a relational database with object-oriented applications.
  */
 package org.apache.ibatis;
+/*
+基础包: exception, reflection, annotation, lang, type, io, logging, parsing
+配置解析包: binding, builder, mapping, scripting, datasource
+核心操作包: jdbc, cache, transaction, cursor, executor, session, plugin
+ */
