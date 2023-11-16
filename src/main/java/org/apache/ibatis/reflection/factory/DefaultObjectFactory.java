@@ -40,6 +40,13 @@ public class DefaultObjectFactory implements ObjectFactory, Serializable {
 
   private static final long serialVersionUID = -8855120656740914948L;
 
+  /**
+   * 传入一个类型, 采用无参构造方法生成这个类型的实例
+   *
+   * @param type Object type
+   * @param <T>  Object type
+   * @return Object
+   */
   @Override
   public <T> T create(Class<T> type) {
     return create(type, null, null);
@@ -48,6 +55,7 @@ public class DefaultObjectFactory implements ObjectFactory, Serializable {
   @SuppressWarnings("unchecked")
   @Override
   public <T> T create(Class<T> type, List<Class<?>> constructorArgTypes, List<Object> constructorArgs) {
+    // 先解析是否是集合类型
     Class<?> classToCreate = resolveInterface(type);
     // we know types are assignable
     return (T) instantiateClass(classToCreate, constructorArgTypes, constructorArgs);
@@ -56,6 +64,7 @@ public class DefaultObjectFactory implements ObjectFactory, Serializable {
   private <T> T instantiateClass(Class<T> type, List<Class<?>> constructorArgTypes, List<Object> constructorArgs) {
     try {
       Constructor<T> constructor;
+      // 没有参数, 采用无参构造方法进行构造对象
       if (constructorArgTypes == null || constructorArgs == null) {
         // 获取无参构造器
         constructor = type.getDeclaredConstructor();
@@ -71,6 +80,7 @@ public class DefaultObjectFactory implements ObjectFactory, Serializable {
           }
         }
       }
+      // 有参数, 采用参数构造器进行构造对象
       constructor = type.getDeclaredConstructor(constructorArgTypes.toArray(new Class[0]));
       try {
         return constructor.newInstance(constructorArgs.toArray(new Object[0]));
@@ -92,6 +102,12 @@ public class DefaultObjectFactory implements ObjectFactory, Serializable {
     }
   }
 
+  /**
+   * 通过接口得到这些接口的一些常用类的信息
+   *
+   * @param type class
+   * @return 对应的 class
+   */
   protected Class<?> resolveInterface(Class<?> type) {
     Class<?> classToCreate;
     if (type == List.class || type == Collection.class || type == Iterable.class) {
@@ -110,6 +126,8 @@ public class DefaultObjectFactory implements ObjectFactory, Serializable {
 
   @Override
   public <T> boolean isCollection(Class<T> type) {
+    // 确定此 Class 对象所表示的类或接口是否与指定的 Class 参数所表示的类或接口相同，或者是该类或接口的超类或超接口。
+    // Collection.class.isAssignableFrom(ArrayList.class) = true
     return Collection.class.isAssignableFrom(type);
   }
 

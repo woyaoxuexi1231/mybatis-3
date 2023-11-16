@@ -18,6 +18,8 @@ package org.apache.ibatis.reflection.property;
 import java.util.Iterator;
 
 /**
+ * 解析属性方式的对象名
+ *
  * @author Clinton Begin
  */
 public class PropertyTokenizer implements Iterator<PropertyTokenizer> {
@@ -27,6 +29,7 @@ public class PropertyTokenizer implements Iterator<PropertyTokenizer> {
   private final String children;
 
   public PropertyTokenizer(String fullname) {
+    // xxx.yyy[2] delim = xxx children = yyy[2]
     int delim = fullname.indexOf('.');
     if (delim > -1) {
       name = fullname.substring(0, delim);
@@ -35,6 +38,8 @@ public class PropertyTokenizer implements Iterator<PropertyTokenizer> {
       name = fullname;
       children = null;
     }
+
+    // yyy[2] index = 2, name = yyy
     indexedName = name;
     delim = name.indexOf('[');
     if (delim > -1) {
@@ -72,6 +77,6 @@ public class PropertyTokenizer implements Iterator<PropertyTokenizer> {
   @Override
   public void remove() {
     throw new UnsupportedOperationException(
-        "Remove is not supported, as it has no meaning in the context of properties.");
+      "Remove is not supported, as it has no meaning in the context of properties.");
   }
 }

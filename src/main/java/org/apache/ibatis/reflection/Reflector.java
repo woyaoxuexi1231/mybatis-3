@@ -341,8 +341,20 @@ public class Reflector {
    */
   public static boolean canControlMemberAccessible() {
     try {
+      /*
+      `System.getSecurityManager()` 是 Java 中的一个静态方法，用于获取当前正在运行的 Java 虚拟机的安全管理器（SecurityManager）。
+      安全管理器是 Java 安全模型的一部分，它可以实施安全策略，用于控制对系统资源（如文件、网络、执行权限等）的访问。安全管理器允许开发人员定义自己的安全策略，以确保代码在运行时符合特定的安全要求。
+      `System.getSecurityManager()` 方法返回当前线程的安全管理器对象，如果没有设置安全管理器，则返回 `null`。可以使用此方法来检查是否存在安全管理器，并在代码中根据需要执行相应的操作。
+       */
       SecurityManager securityManager = System.getSecurityManager();
       if (null != securityManager) {
+        /*
+        `securityManager.checkPermission(new ReflectPermission("suppressAccessChecks"))` 是一个 Java 安全模型中的检查权限的方法调用。
+        该方法会检查当前线程的安全管理器是否存在，如果存在，则会继续执行检查，如果权限检查失败，安全管理器会抛出 `SecurityException` 异常，通常用于限制不安全的反射操作。
+        在这个例子中，`ReflectPermission("suppressAccessChecks")` 表示反射权限，即允许在运行时使用 Java 反射 API 来绕过 Java 访问控制机制，这可能会导致安全问题。
+        通过调用 `checkPermission` 方法，可以检查当前线程是否有权限进行这样的反射操作，如果没有，会抛出 `SecurityException` 异常。
+        通常情况下，只有在 Java 应用程序需要进行高度安全性操作时才会使用 `securityManager.checkPermission(new ReflectPermission("suppressAccessChecks"))` 来检查反射权限，以确保应用程序不会被利用来进行不安全的反射操作。
+         */
         securityManager.checkPermission(new ReflectPermission("suppressAccessChecks"));
       }
     } catch (SecurityException e) {
